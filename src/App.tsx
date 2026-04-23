@@ -49,7 +49,7 @@ const HorizontalCarousel = ({ project, onImageClick }: CarouselProps) => {
     setScrollLeft(scrollRef.current.scrollLeft);
   };
 
-  const handleImageClick = (e: React.MouseEvent, imgPath: string, alt: string) => {
+  const handleImageClick = (imgPath: string, alt: string) => {
     if (!hasMoved) {
       onImageClick(imgPath, alt);
     }
@@ -66,18 +66,17 @@ const HorizontalCarousel = ({ project, onImageClick }: CarouselProps) => {
       </div>
 
       <div className="overflow-hidden relative">
-        <div 
+        <div
           ref={scrollRef}
           className={`flex overflow-x-auto gap-4 md:gap-8 no-scrollbar pb-8 w-full px-4 md:px-0 touch-pan-x ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           onMouseDown={handleMouseDown}
         >
           {project.images.map((img, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className="flex-none h-[60vw] max-h-[500px] md:h-[65vh]"
-              onClick={(e) => handleImageClick(e, `${project.path}${img}`, `${project.title} - ${idx + 1}`)}
-            >
-              <img
+              onClick={() => handleImageClick(`${project.path}${img}`, `${project.title} - ${idx + 1}`)}
+            >              <img
                 src={`${project.path}${img}`}
                 alt={`${project.title} - ${idx + 1}`}
                 className="h-full w-auto object-contain block hover:opacity-90 transition-opacity pointer-events-none"
