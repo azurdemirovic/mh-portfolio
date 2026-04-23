@@ -17,10 +17,24 @@
 
 body {
   margin: 0;
-  display: flex;
   min-width: 320px;
   min-height: 100vh;
   background-color: #ffffff;
   font-family: var(--font-univers);
   text-transform: uppercase;
+  color: #000000;
+}
+
+#root {
+  width: 100%;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
