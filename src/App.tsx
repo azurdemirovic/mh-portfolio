@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PROJECTS } from './constants';
 
 interface CarouselProps {
@@ -7,8 +7,56 @@ interface CarouselProps {
 }
 
 const HorizontalCarousel = ({ project, onImageClick }: CarouselProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [hasMoved, setHasMoved] = useState(false);
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !scrollRef.current) return;
+      
+      const x = e.pageX - scrollRef.current.offsetLeft;
+      const walk = (x - startX) * 1.5;
+      scrollRef.current.scrollLeft = scrollLeft - walk;
+      
+      if (Math.abs(walk) > 5) {
+        setHasMoved(true);
+      }
+    };
+
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleGlobalMouseMove);
+      window.addEventListener('mouseup', handleGlobalMouseUp);
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, startX, scrollLeft]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setHasMoved(false);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+
+  const handleImageClick = (e: React.MouseEvent, imgPath: string, alt: string) => {
+    if (!hasMoved) {
+      onImageClick(imgPath, alt);
+    }
+  };
+
   return (
-    <section className="flex flex-col py-20 md:py-24 border-t border-black/5 md:border-none">
+    <section className="flex flex-col py-20 md:py-24 border-t border-black/5 md:border-none select-none">
       <div className="shrink-0 pb-10 px-4 md:px-0">
         <h3 className="text-xl md:text-3xl tracking-tighter flex gap-2">
           <span className="md:hidden">{project.id} /</span>
@@ -16,21 +64,23 @@ const HorizontalCarousel = ({ project, onImageClick }: CarouselProps) => {
         </h3>
         <span className="hidden md:block text-sm font-mono">{project.id}</span>
       </div>
-      
+
       <div className="overflow-hidden relative">
         <div 
-          className="flex overflow-x-auto gap-4 md:gap-8 no-scrollbar cursor-ew-resize w-full px-4 md:px-0 touch-pan-x"
+          ref={scrollRef}
+          className={`flex overflow-x-auto gap-4 md:gap-8 no-scrollbar pb-8 w-full px-4 md:px-0 touch-pan-x ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          onMouseDown={handleMouseDown}
         >
           {project.images.map((img, idx) => (
             <div 
               key={idx} 
-              className="flex-none h-[60vw] max-h-[500px] md:h-[65vh] cursor-pointer"
-              onClick={() => onImageClick(`${project.path}${img}`, `${project.title} - ${idx + 1}`)}
+              className="flex-none h-[60vw] max-h-[500px] md:h-[65vh]"
+              onClick={(e) => handleImageClick(e, `${project.path}${img}`, `${project.title} - ${idx + 1}`)}
             >
               <img
                 src={`${project.path}${img}`}
                 alt={`${project.title} - ${idx + 1}`}
-                className="h-full w-auto object-contain block hover:opacity-90 transition-opacity"
+                className="h-full w-auto object-contain block hover:opacity-90 transition-opacity pointer-events-none"
                 loading="lazy"
               />
             </div>
@@ -48,7 +98,6 @@ const Lightbox = ({ src, alt, onClose }: { src: string; alt: string; onClose: ()
   const [isDragging, setIsDragging] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
-  // Prevent background scroll
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = 'unset'; };
@@ -120,7 +169,6 @@ function App() {
       <section className="min-h-[85vh] md:h-screen w-full relative flex flex-col overflow-hidden">
         <header className="w-full p-4 md:p-6 relative z-10">
           <h1 className="text-[9vw] md:text-[4.5vw] leading-[0.9] tracking-tighter flex flex-col w-full uppercase">
-            {/* Row 1: I AM MATEJ HANŽEL, A VISUAL DESIGNER (PC) - Spaced evenly */}
             <div className="flex flex-col md:flex-row md:justify-between w-full">
               <div className="flex justify-between md:contents">
                 <span>I</span><span>AM</span><span>MATEJ</span><span>HANŽEL,</span>
@@ -130,7 +178,6 @@ function App() {
               </div>
             </div>
 
-            {/* Row 2: WITH EXPIRIENCE IN PHOTOGRAPHY, (PC) - Spaced evenly */}
             <div className="flex flex-col md:flex-row md:justify-between w-full">
               <div className="flex justify-between md:contents">
                 <span>WITH</span><span>EXPIRIENCE</span>
@@ -140,7 +187,6 @@ function App() {
               </div>
             </div>
 
-            {/* Row 3: MIXING LIGHT AND MOTION. (PC) - Keep the gap */}
             <div className="md:flex md:justify-between w-full">
               <span className="flex justify-between md:justify-start md:gap-[0.2em] w-full md:w-auto">
                 <span>MIXING</span><span>LIGHT</span>
